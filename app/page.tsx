@@ -313,7 +313,7 @@ export default async function Home() {
             position: absolute;
             left: 0;
             right: 0;
-            top: 36%;
+            top: 50%;
             transform: translateY(-50%);
             display: flex;
             align-items: center;
