@@ -64,7 +64,6 @@ export default async function Home() {
     "home.hero.title",
     "home.hero.subtitle",
     "home.hero.slide1",
-    "home.hero.slide1",
     "home.hero.slide2",
     "home.hero.slide3",
     "home.booking.cta",
@@ -208,13 +207,11 @@ export default async function Home() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/55 to-black/35" />
         <div className="absolute inset-0 [background:radial-gradient(50%_40%_at_20%_10%,rgba(15,90,87,.45)_0%,rgba(0,0,0,0)_70%)]" />
 
-        {/* arrows */}
-        <div className="absolute inset-y-0 left-3 md:left-6 flex items-center z-20">
+        {/* ✅ Arrows now avoid the BookingBar area on mobile */}
+        <div className="heroArrows z-20">
           <a href="#hero-slide-3" className="heroArrow" aria-label="Previous slide" title="Previous">
             ‹
           </a>
-        </div>
-        <div className="absolute inset-y-0 right-3 md:right-6 flex items-center z-20">
           <a href="#hero-slide-2" className="heroArrow" aria-label="Next slide" title="Next">
             ›
           </a>
@@ -242,7 +239,8 @@ export default async function Home() {
             </Button>
           </div>
 
-          <div className="mt-12">
+          {/* ✅ Booking bar on top, so nothing overlays it */}
+          <div className="mt-12 relative z-30">
             <BookingBar ctaText={c["home.booking.cta"] || "Book Now"} />
           </div>
         </div>
@@ -276,7 +274,6 @@ export default async function Home() {
           @keyframes heroFade1 {
             0%   { opacity: 1; transform: translateZ(0) scale(1.00); }
             30%  { opacity: 1; transform: translateZ(0) scale(1.00); }
-            /* overlap fade: slide2 begins to appear BEFORE slide1 disappears */
             38%  { opacity: 0; transform: translateZ(0) scale(1.03); }
             100% { opacity: 0; transform: translateZ(0) scale(1.03); }
           }
@@ -295,7 +292,6 @@ export default async function Home() {
             62%  { opacity: 0; transform: translateZ(0) scale(1.03); }
             70%  { opacity: 1; transform: translateZ(0) scale(1.00); }
             94%  { opacity: 1; transform: translateZ(0) scale(1.00); }
-            /* overlap back into slide1 */
             100% { opacity: 0; transform: translateZ(0) scale(1.03); }
           }
 
@@ -306,6 +302,28 @@ export default async function Home() {
             opacity: 1 !important;
             transform: translateZ(0) scale(1.00) !important;
             animation: none !important;
+          }
+
+          /* ✅ Key fix: arrows container avoids booking bar region */
+          .heroArrows{
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 240px; /* reserve space for BookingBar on mobile */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 12px;
+            pointer-events: none; /* let taps go through except on arrows */
+          }
+          .heroArrows .heroArrow{ pointer-events: auto; }
+
+          @media (min-width: 768px){
+            .heroArrows{
+              bottom: 160px; /* booking bar is smaller visually on desktop */
+              padding: 0 24px;
+            }
           }
 
           .heroArrow{
@@ -505,7 +523,10 @@ export default async function Home() {
       {/* GALLERY */}
       <section className="lux-container py-16 md:py-20">
         <div className="flex items-end justify-between gap-6 flex-wrap">
-          <KickerTitle kicker={c["home.gallery.kicker"] || "Our Gallery"} title={c["home.gallery.title"] || "A glimpse of the experience"} />
+          <KickerTitle
+            kicker={c["home.gallery.kicker"] || "Our Gallery"}
+            title={c["home.gallery.title"] || "A glimpse of the experience"}
+          />
           <Button href="/gallery" className="!bg-[var(--primary)] !text-white hover:!bg-[var(--primary-2)]">
             {c["home.gallery.cta"] || "View More"}
           </Button>
