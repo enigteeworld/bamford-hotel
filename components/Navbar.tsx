@@ -10,32 +10,18 @@ type NavbarProps = {
 
 export default function Navbar({ brandName }: NavbarProps) {
   const pathname = usePathname();
-  const Brand = brandName || "BAMFORD HOTEL";
-
   const [open, setOpen] = useState(false);
 
-  const links = useMemo(
-    () => [
-      { href: "/rooms", label: "Rooms" },
-      { href: "/gallery", label: "Gallery" },
-      { href: "/about", label: "About" },
-      { href: "/contact", label: "Contact" },
-    ],
-    []
-  );
+  const Brand = useMemo(() => brandName || "BAMFORD HOTEL", [brandName]);
 
-  function isActive(href: string) {
-    return pathname === href || (href !== "/" && pathname?.startsWith(href));
-  }
-
+  // Close menu on route change
   useEffect(() => {
-    // close drawer on route change
     setOpen(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
+  // Lock body scroll while menu open
   useEffect(() => {
-    // lock scroll while drawer is open
     if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -44,124 +30,136 @@ export default function Navbar({ brandName }: NavbarProps) {
     };
   }, [open]);
 
-  useEffect(() => {
-    // ESC to close
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  const navLink = (href: string, label: string) => {
+    const active = pathname === href || (href !== "/" && pathname?.startsWith(href));
+    return (
+      <Link
+        href={href}
+        className={[
+          "text-sm font-medium transition-colors",
+          active ? "text-black" : "text-black/70 hover:text-black",
+        ].join(" ")}
+      >
+        {label}
+      </Link>
+    );
+  };
+
+  const MobileItem = ({ href, label }: { href: string; label: string }) => {
+    const active = pathname === href || (href !== "/" && pathname?.startsWith(href));
+    return (
+      <Link
+        href={href}
+        className={[
+          "w-full rounded-2xl px-5 py-4 flex items-center justify-between",
+          "border border-black/10 bg-white",
+          "shadow-[0_18px_60px_rgba(0,0,0,0.06)]",
+          active ? "ring-2 ring-[var(--primary)]/25" : "hover:bg-black/[0.02]",
+        ].join(" ")}
+      >
+        <span className={["text-base font-semibold", active ? "text-[var(--primary)]" : "text-black"].join(" ")}>
+          {label}
+        </span>
+        <span className="text-black/35 text-xl">→</span>
+      </Link>
+    );
+  };
 
   return (
-    <header className="w-full border-b border-black/10 bg-white/80 backdrop-blur relative z-50">
-      <div className="lux-container h-16 flex items-center justify-between gap-3">
-        <Link href="/" className="text-xs tracking-[0.35em] font-semibold text-black">
-          {Brand}
-        </Link>
-
-        {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-8">
-          {links.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className={[
-                "text-sm font-medium transition-colors",
-                isActive(l.href) ? "text-black" : "text-black/70 hover:text-black",
-              ].join(" ")}
-            >
-              {l.label}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="flex items-center gap-2">
-          {/* Book now */}
-          <Link
-            href="/rooms"
-            className="inline-flex items-center rounded-full bg-[var(--primary)] px-4 md:px-6 py-2 text-[11px] md:text-xs font-semibold tracking-[0.25em] text-white hover:bg-[var(--primary-2)] whitespace-nowrap"
-          >
-            BOOK NOW
+    <>
+      <header className="w-full border-b border-black/10 bg-white/80 backdrop-blur">
+        <div className="lux-container h-16 flex items-center justify-between">
+          <Link href="/" className="text-xs tracking-[0.35em] font-semibold text-black">
+            {Brand}
           </Link>
 
-          {/* Mobile hamburger */}
-          <button
-            type="button"
-            aria-label="Open menu"
-            aria-expanded={open}
-            onClick={() => setOpen(true)}
-            className="md:hidden inline-flex items-center justify-center h-10 w-10 rounded-xl border border-black/10 bg-white hover:bg-black/[0.03]"
-          >
-            <span className="sr-only">Open menu</span>
-            <div className="grid gap-1">
-              <span className="block h-[2px] w-5 bg-black/80" />
-              <span className="block h-[2px] w-5 bg-black/80" />
-              <span className="block h-[2px] w-5 bg-black/80" />
-            </div>
-          </button>
-        </div>
-      </div>
+          <nav className="hidden md:flex items-center gap-8">
+            {navLink("/rooms", "Rooms")}
+            {navLink("/gallery", "Gallery")}
+            {navLink("/about", "About")}
+            {navLink("/contact", "Contact")}
+          </nav>
 
-      {/* Mobile drawer */}
-      {open && (
-        <div className="md:hidden fixed inset-0 z-[60]">
+          <div className="flex items-center gap-3">
+            <Link
+              href="/rooms"
+              className="inline-flex items-center rounded-full bg-[var(--primary)] px-6 py-2 text-xs font-semibold tracking-[0.25em] text-white hover:bg-[var(--primary-2)]"
+            >
+              BOOK NOW
+            </Link>
+
+            {/* Mobile hamburger */}
+            <button
+              type="button"
+              className="md:hidden inline-flex items-center justify-center w-11 h-11 rounded-2xl border border-black/10 bg-white hover:bg-black/[0.02]"
+              aria-label="Open menu"
+              onClick={() => setOpen(true)}
+            >
+              <span className="text-xl leading-none">☰</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* ✅ Full-screen fixed mobile menu */}
+      {open ? (
+        <div
+          className="fixed inset-0 z-[9999]"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Mobile menu"
+        >
           {/* backdrop */}
           <button
             aria-label="Close menu"
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 bg-black/35"
             onClick={() => setOpen(false)}
           />
 
           {/* panel */}
-          <aside className="absolute right-0 top-0 h-full w-[86%] max-w-sm bg-white shadow-2xl border-l border-black/10">
-            <div className="h-16 px-5 flex items-center justify-between border-b border-black/10">
+          <div className="absolute inset-x-0 top-0 bg-white/92 backdrop-blur-xl border-b border-black/10">
+            <div className="lux-container h-16 flex items-center justify-between">
               <div className="text-xs tracking-[0.35em] font-semibold text-black">{Brand}</div>
+
               <button
                 type="button"
+                className="inline-flex items-center justify-center w-11 h-11 rounded-2xl border border-black/10 bg-white hover:bg-black/[0.02]"
                 aria-label="Close menu"
                 onClick={() => setOpen(false)}
-                className="inline-flex items-center justify-center h-10 w-10 rounded-xl border border-black/10 bg-white hover:bg-black/[0.03]"
               >
-                <span className="text-xl leading-none">×</span>
+                <span className="text-xl leading-none">✕</span>
               </button>
             </div>
+          </div>
 
-            <div className="p-5">
-              <div className="grid gap-2">
-                {links.map((l) => (
+          {/* content */}
+          <div className="absolute inset-x-0 top-16 bottom-0 overflow-auto">
+            <div className="lux-container py-6">
+              <div className="grid gap-4">
+                <MobileItem href="/rooms" label="Rooms" />
+                <MobileItem href="/gallery" label="Gallery" />
+                <MobileItem href="/about" label="About" />
+                <MobileItem href="/contact" label="Contact" />
+
+                <div className="mt-2 rounded-2xl border border-black/10 bg-white p-5 shadow-[0_18px_60px_rgba(0,0,0,0.06)]">
+                  <div className="text-[11px] tracking-[0.32em] uppercase text-black/60">Quick Action</div>
                   <Link
-                    key={l.href}
-                    href={l.href}
-                    className={[
-                      "flex items-center justify-between rounded-2xl border px-4 py-4 text-sm font-semibold",
-                      isActive(l.href)
-                        ? "border-[var(--primary)] bg-[rgba(15,90,87,0.08)] text-[var(--primary)]"
-                        : "border-black/10 bg-white text-black hover:bg-black/[0.02]",
-                    ].join(" ")}
+                    href="/rooms"
+                    className="mt-3 block w-full rounded-full bg-[var(--primary)] px-6 py-4 text-center text-xs font-semibold tracking-[0.25em] text-white hover:bg-[var(--primary-2)]"
                   >
-                    <span>{l.label}</span>
-                    <span className="text-black/40">→</span>
+                    BOOK NOW
                   </Link>
-                ))}
-              </div>
-
-              <div className="mt-6 rounded-2xl border border-black/10 bg-[#fffdf9] p-4">
-                <div className="text-[11px] uppercase tracking-[0.3em] text-black/60">Quick action</div>
-                <Link
-                  href="/rooms"
-                  className="mt-3 inline-flex w-full items-center justify-center rounded-full bg-[var(--primary)] px-6 py-3 text-xs font-semibold tracking-[0.25em] text-white hover:bg-[var(--primary-2)]"
-                >
-                  BOOK NOW
-                </Link>
-                <div className="mt-3 text-xs text-black/55 leading-relaxed">
-                  Browse rooms, reserve, and pay securely.
+                  <div className="mt-3 text-sm text-black/60">
+                    Browse rooms, reserve, and pay securely.
+                  </div>
                 </div>
               </div>
+
+              <div className="h-10" />
             </div>
-          </aside>
+          </div>
         </div>
-      )}
-    </header>
+      ) : null}
+    </>
   );
 }

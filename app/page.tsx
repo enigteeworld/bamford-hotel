@@ -206,8 +206,10 @@ export default async function Home() {
         {/* overlays */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/55 to-black/35" />
         <div className="absolute inset-0 [background:radial-gradient(50%_40%_at_20%_10%,rgba(15,90,87,.45)_0%,rgba(0,0,0,0)_70%)]" />
+        {/* subtle premium grain */}
+        <div className="absolute inset-0 opacity-[0.10] mix-blend-overlay [background-image:radial-gradient(rgba(255,255,255,.35)_1px,transparent_1px)] [background-size:3px_3px]" />
 
-        {/* ✅ Arrows now avoid the BookingBar area on mobile */}
+        {/* ✅ arrows: moved up on mobile + click-safe */}
         <div className="heroArrows z-20">
           <a href="#hero-slide-3" className="heroArrow" aria-label="Previous slide" title="Previous">
             ‹
@@ -227,13 +229,16 @@ export default async function Home() {
           <p className="heroSubtitle text-white/80">{c["home.hero.subtitle"] || ""}</p>
 
           <div className="mt-10 flex flex-wrap gap-3">
-            <Button href="/rooms" className="!bg-[var(--primary)] !text-white hover:!bg-[var(--primary-2)]">
+            <Button
+              href="/rooms"
+              className="!bg-[var(--primary)] !text-white hover:!bg-[var(--primary-2)] !shadow-[0_18px_50px_rgba(0,0,0,0.22)]"
+            >
               Explore Rooms
             </Button>
             <Button
               href="/gallery"
               variant="ghost"
-              className="!bg-white/10 !text-white !border-white/25 hover:!bg-white/15"
+              className="!bg-white/10 !text-white !border-white/25 hover:!bg-white/15 !backdrop-blur"
             >
               View Gallery
             </Button>
@@ -246,8 +251,8 @@ export default async function Home() {
         </div>
 
         <style>{`
-          .hero { min-height: 560px; }
-          @media (min-width: 768px) { .hero { min-height: 720px; } }
+          .hero { min-height: 600px; }
+          @media (min-width: 768px) { .hero { min-height: 740px; } }
 
           /* ✅ This prevents the "grey flash" if all slides are briefly transparent */
           .heroSlider { z-index: 0; background: #000; }
@@ -262,15 +267,14 @@ export default async function Home() {
             will-change: opacity, transform;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
+            filter: saturate(1.03) contrast(1.03);
           }
 
           /* ✅ smoother crossfade (no blank moment) */
-          /* 24s total, each slide ~8s, with overlap during transitions */
           .heroSlide1 { animation: heroFade1 24s infinite; }
           .heroSlide2 { animation: heroFade2 24s infinite; }
           .heroSlide3 { animation: heroFade3 24s infinite; }
 
-          /* Slide 1 starts visible immediately */
           @keyframes heroFade1 {
             0%   { opacity: 1; transform: translateZ(0) scale(1.00); }
             30%  { opacity: 1; transform: translateZ(0) scale(1.00); }
@@ -304,45 +308,47 @@ export default async function Home() {
             animation: none !important;
           }
 
-          /* ✅ Key fix: arrows container avoids booking bar region */
+          /* ✅ KEY FIX: arrows sit higher on mobile so they never cover hero CTAs */
           .heroArrows{
             position: absolute;
             left: 0;
             right: 0;
-            top: 0;
-            bottom: 240px; /* reserve space for BookingBar on mobile */
+            top: 36%;
+            transform: translateY(-50%);
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 12px;
-            pointer-events: none; /* let taps go through except on arrows */
+            pointer-events: none; /* taps go through except on arrow buttons */
           }
           .heroArrows .heroArrow{ pointer-events: auto; }
 
           @media (min-width: 768px){
             .heroArrows{
-              bottom: 160px; /* booking bar is smaller visually on desktop */
+              top: 50%;
               padding: 0 24px;
             }
           }
 
           .heroArrow{
-            width: 48px;
-            height: 48px;
+            width: 52px;
+            height: 52px;
             border-radius: 999px;
             display:flex;
             align-items:center;
             justify-content:center;
             background: rgba(0,0,0,0.18);
-            border: 1px solid rgba(255,255,255,0.25);
+            border: 1px solid rgba(255,255,255,0.24);
             color: #fff;
             text-decoration: none;
             font-size: 30px;
             line-height: 1;
-            backdrop-filter: blur(10px);
-            transition: transform 150ms ease, background 150ms ease;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 18px 60px rgba(0,0,0,0.25);
+            transition: transform 150ms ease, background 150ms ease, border-color 150ms ease;
           }
-          .heroArrow:hover{ background: rgba(0,0,0,0.24); transform: scale(1.03); }
+          .heroArrow:hover{ background: rgba(0,0,0,0.24); border-color: rgba(255,255,255,0.30); transform: scale(1.03); }
           .heroArrow:active{ transform: scale(0.98); }
 
           .heroKicker{
@@ -391,7 +397,10 @@ export default async function Home() {
           {rooms.map((r, idx) => {
             const href = r.slug ? `/rooms/${r.slug}` : "/rooms";
             return (
-              <div key={idx} className="lux-border lux-card rounded-2xl overflow-hidden">
+              <div
+                key={idx}
+                className="lux-border lux-card rounded-2xl overflow-hidden transition-transform duration-200 hover:-translate-y-[2px]"
+              >
                 <div className="h-[220px] bg-black/[0.03]">
                   <Img src={r.image} alt={r.name || `Room ${idx + 1}`} />
                 </div>
@@ -488,13 +497,19 @@ export default async function Home() {
       {/* LATEST NEWS */}
       <section className="bg-white/75 border-y border-[var(--line)]">
         <div className="lux-container py-16 md:py-20">
-          <KickerTitle kicker={c["home.news.kicker"] || "Latest News"} title={c["home.news.title"] || "Stay updated"} />
+          <KickerTitle
+            kicker={c["home.news.kicker"] || "Latest News"}
+            title={c["home.news.title"] || "Stay updated"}
+          />
 
           <div className="mt-8 flex flex-wrap gap-2">
             {[c["home.news.tab1"], c["home.news.tab2"], c["home.news.tab3"]]
               .filter(Boolean)
               .map((t, i) => (
-                <span key={i} className="px-4 py-2 rounded-full text-xs font-semibold border border-[var(--line)] bg-white">
+                <span
+                  key={i}
+                  className="px-4 py-2 rounded-full text-xs font-semibold border border-[var(--line)] bg-white"
+                >
                   {t}
                 </span>
               ))}
